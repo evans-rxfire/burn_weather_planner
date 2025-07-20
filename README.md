@@ -4,7 +4,7 @@ A web-based tool to assist in the prescribed fire planning process by evaluating
 
 ## Live Demo
 
-[View te App](https://evans-rxfire.github.io/burn_weather_planner/)
+[View the App](https://evans-rxfire.github.io/burn_weather_planner/)
 
 ---
 
