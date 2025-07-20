@@ -263,7 +263,7 @@ function buildForecastGrid(evaluatedBurnPeriodData) {
             hourDiv.title = `
             Date: ${period.date}
             Hour: ${period.hour}
-            Temp: ${period.tmep}\u00B0F
+            Temp: ${period.temp}\u00B0F
             RH: ${period.rh}%
             Wind Speed: ${period.windSpeed}mph
             Wind Direction: ${period.windDir}
