@@ -116,3 +116,9 @@ Would that necessitate adding an additional day <div> to capture the end of the 
 Depending on how the data is received, it would be nice to have the day <div>s updated with the appropriate date (and day of the week, if possible).
 
 
+date
+hour
+temp
+rh
+windSpeed
+windDir

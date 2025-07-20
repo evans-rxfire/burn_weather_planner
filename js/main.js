@@ -45,6 +45,7 @@ if ('serviceWorker' in navigator) {
 
 
 // FUNCTIONS
+// debugging
 function debugLog(...args) {
     if (DEBUG) {
         console.log(...args);
@@ -191,8 +192,7 @@ function determineStatus(period, preferred, acceptable) {
 //build legend for output-container in index.html
 function buildLegend() {
     const legendContainer = document.getElementById("legend-container");
-    legendContainer.innerHTML = ""; // Clear previous content
-
+    legendContainer.innerHTML = "";
     const legendItems = [
         { label: "Preferred", color: "bg-sky-300 dark:bg-sky-600" },
         { label: "Acceptable", color: "bg-green-300 dark:bg-green-700" },
@@ -222,51 +222,61 @@ function buildLegend() {
 
 // populate forecast grid in index.html
 function buildForecastGrid(evaluatedBurnPeriodData) {
-  clearForecastGrid();
+    clearForecastGrid();
 
-  const groupedByDate = evaluatedBurnPeriodData.reduce((groups, period) => {
-    if (!groups[period.date]) {
-      groups[period.date] = [];
+    const groupedByDate = evaluatedBurnPeriodData.reduce((groups, period) => {
+        if (!groups[period.date]) {
+        groups[period.date] = [];
+        }
+        groups[period.date].push(period);
+        return groups;
+    }, {});
+
+    const gridContainer = document.createElement("div");
+    gridContainer.className = "flex gap-2 justify-center";
+
+    for (const [date, periods] of Object.entries(groupedByDate)) {
+        const dayColumn = document.createElement("div");
+        dayColumn.className = "flex flex-col w-28 border border-gray-300 dark:border-gray-600 rounded p-3 shadow-sm bg-white dark:bg-gray-900";
+
+        const dateHeader = document.createElement("div");
+        const dateObj = new Date(date);
+        const options = { weekday: "short" };
+        const dayName = dateObj.toLocaleDateString(undefined, options);
+        dateHeader.textContent = `${dayName} ${date}`;
+
+        dateHeader.className = "font-semibold mb-auto text-center text-lg text-gray-700 dark:text-gray-200";
+        dayColumn.appendChild(dateHeader);
+
+        periods.forEach((period) => {
+            const hourDiv = document.createElement("div");
+            hourDiv.className = `p-3 mb-2 rounded-lg text-sm font-medium text-center cursor-default ${
+                period.status === "preferred"
+                ? "bg-sky-300 dark:bg-sky-600 dark:text-white"
+                : period.status === "acceptable"
+                ? "bg-green-300 dark:bg-green-700 dark:text-white"
+                : "bg-gray-300 dark:bg-gray-600 dark:text-white"
+            }`;
+
+            hourDiv.textContent = `${period.hour}`;
+
+            hourDiv.title = `
+            Date: ${period.date}
+            Hour: ${period.hour}
+            Temp: ${period.tmep}\u00B0F
+            RH: ${period.rh}%
+            Wind Speed: ${period.windSpeed}mph
+            Wind Direction: ${period.windDir}
+            Status: ${period.status}
+            `.trim();
+            
+            dayColumn.appendChild(hourDiv);
+        });
+
+        gridContainer.appendChild(dayColumn);
     }
-    groups[period.date].push(period);
-    return groups;
-  }, {});
 
-  const gridContainer = document.createElement("div");
-  gridContainer.className = "flex gap-2 justify-center";
-
-  for (const [date, periods] of Object.entries(groupedByDate)) {
-    const dayColumn = document.createElement("div");
-    dayColumn.className = "flex flex-col w-28 border border-gray-300 dark:border-gray-600 rounded p-3 shadow-sm bg-white dark:bg-gray-900";
-
-    const dateHeader = document.createElement("div");
-    const dateObj = new Date(date);
-    const options = { weekday: "short" };
-    const dayName = dateObj.toLocaleDateString(undefined, options);
-    dateHeader.textContent = `${dayName} ${date}`;
-
-    dateHeader.className = "font-semibold mb-auto text-center text-lg text-gray-700 dark:text-gray-200";
-    dayColumn.appendChild(dateHeader);
-
-    periods.forEach((period) => {
-      const hourDiv = document.createElement("div");
-      hourDiv.className = `p-3 mb-2 rounded-lg text-sm font-medium text-center cursor-default ${
-        period.status === "preferred"
-          ? "bg-sky-300 dark:bg-sky-600 dark:text-white"
-          : period.status === "acceptable"
-          ? "bg-green-300 dark:bg-green-700 dark:text-white"
-          : "bg-gray-300 dark:bg-gray-600 dark:text-white"
-      }`;
-
-      hourDiv.textContent = `${period.hour}`;
-
-      dayColumn.appendChild(hourDiv);
-    });
-
-    gridContainer.appendChild(dayColumn);
-  }
-
-  outputContainer.appendChild(gridContainer);
+    outputContainer.appendChild(gridContainer);
 }
 
 // save form data for future use
@@ -329,7 +339,7 @@ function saveFormData() {
 //load form data
 function loadFormData() {
     const savedData = JSON.parse(localStorage.getItem("burnPlannerSettings"));
-    if (!savedData) return; // nothing to load
+    if (!savedData) return;
 
     propertyName.value = savedData.propertyName || "";
     latitudeInput.value = savedData.lat || "";
@@ -337,7 +347,6 @@ function loadFormData() {
 
     const { preferred, acceptable } = getPreferredAndAcceptable();
 
-    // Preferred inputs
     preferred.temp.min.value = savedData.preferred.temp.min;
     preferred.temp.max.value = savedData.preferred.temp.max;
     preferred.rh.min.value = savedData.preferred.rh.min;
@@ -345,7 +354,6 @@ function loadFormData() {
     preferred.windSpeed.min.value = savedData.preferred.windSpeed.min;
     preferred.windSpeed.max.value = savedData.preferred.windSpeed.max;
 
-    // Acceptable inputs
     acceptable.temp.min.value = savedData.acceptable.temp.min;
     acceptable.temp.max.value = savedData.acceptable.temp.max;
     acceptable.rh.min.value = savedData.acceptable.rh.min;
@@ -353,7 +361,6 @@ function loadFormData() {
     acceptable.windSpeed.min.value = savedData.acceptable.windSpeed.min;
     acceptable.windSpeed.max.value = savedData.acceptable.windSpeed.max;
 
-    // Wind direction checkboxes
     if (Array.isArray(savedData.preferred.windDirs)) {
         setCheckedDirs("preferredWindDir", savedData.preferred.windDirs);
     }
@@ -395,11 +402,12 @@ function clearFormData() {
     clearChecked("acceptableWindDir");
     }
 
-//clear forecast grid
+// clear forecast grid
 function clearForecastGrid() {
     outputContainer.innerHTML = "";
 }
 
+// error message functions
 function showErrorMessage(msg) {
     const errorDiv = document.getElementById("error-message");
     errorDiv.textContent = msg;
@@ -504,7 +512,7 @@ clearBtn.addEventListener("click", () => {
 
 
 
-
+// app install language
 installBtn?.classList.add("hidden");
 
 
