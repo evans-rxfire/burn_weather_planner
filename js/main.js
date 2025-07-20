@@ -19,11 +19,6 @@ const darkModeBtn = document.getElementById("dark-mode-toggle");
 
 const DEBUG = false;
 
-function debugLog(...args) {
-    if (DEBUG) {
-        console.log(...args);
-    }
-}
 
 if (darkModeBtn) {
     darkModeBtn.addEventListener("click", () => {
@@ -39,8 +34,23 @@ if (darkModeBtn) {
     });
 }
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('./service-worker.js')
+      .then((reg) => debugLog("Service Worker registered:", reg.scope))
+      .catch((err) => debugLog("Service Worker registration failed:", err));
+  });
+}
+
 
 // FUNCTIONS
+function debugLog(...args) {
+    if (DEBUG) {
+        console.log(...args);
+    }
+}
+
 // get data from weather API
 async function fetchForecastData(lat, lon) {
     const pointUrl = `https://api.weather.gov/points/${lat},${lon}`;
@@ -406,6 +416,7 @@ function clearErrorMessage() {
 // EVENT LISTENERS
 document.addEventListener("DOMContentLoaded", loadFormData);
 
+
 submitBtn.addEventListener("click", async (e) => {
     e.preventDefault();
 
@@ -470,6 +481,7 @@ submitBtn.addEventListener("click", async (e) => {
     }
 });
 
+
 saveBtn.addEventListener("click", () => {
     saveFormData();
 
@@ -484,43 +496,41 @@ saveBtn.addEventListener("click", () => {
     setTimeout(() => saveBtn.disabled = false, 1000);
 });
 
+
 clearBtn.addEventListener("click", () => {
     clearFormData();
     clearForecastGrid();
 });
 
 
-/*installBtn?.classList.add("hidden");
 
-// Listen for beforeinstallprompt event
+
+installBtn?.classList.add("hidden");
+
+
 window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault(); // Prevent automatic prompt
+    e.preventDefault();
     deferredPrompt = e;
 
-    // Show the install button
     installBtn?.classList.remove("hidden");
 });
 
-// Handle install button click
+
 installBtn?.addEventListener("click", async () => {
     if (!deferredPrompt) return;
 
-    // Show the install prompt
     deferredPrompt.prompt();
 
-    // Wait for the user's response
     const { outcome } = await deferredPrompt.userChoice;
     debugLog("User choice:", outcome);
 
-    // Reset the deferred prompt variable & hide button
     deferredPrompt = null;
     installBtn?.classList.add("hidden");
 });
 
-// Listen for appinstalled event
+
 window.addEventListener("appinstalled", () => {
     debugLog("✅ App installed");
     deferredPrompt = null;
     installBtn?.classList.add("hidden");
 });
-*/

@@ -1,0 +1,37 @@
+{
+    "id": "/burn_weather_planner/",
+    "name": "Prescribed Burn Weather Planner",
+    "short_name": "Rx Weather Planner",
+    "description": "Find prescribed burn windows in the weather forecast based on prescription parameters.",
+    "start_url": "/burn_weather_planner/index.html",
+    "scope": "/burn_weather_planner/",
+    "display": "standalone",
+    "background_color": "#f8f9fa",
+    "theme_color": "#2563eb",
+    "orientation": "portrait",
+    "icons": [
+        {
+        "src": "/burn_weather_planner/icons/icon-192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+        },
+        {
+        "src": "/burn_weather_planner/icons/icon-512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/burn_weather_planner/icons/screenshot-wide.png",
+            "sizes": "1255x901",
+            "type": "image/png",
+            "form_factor": "wide"
+        },
+        {
+            "src": "/burn_weather_planner/icons/screenshot-default.png",
+            "sizes": "512x454",
+            "type": "image/png"
+        }
+    ]
+}
