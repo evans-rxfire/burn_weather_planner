@@ -26,12 +26,16 @@
                     
                     <div class="flex items-center gap-4 mb-4">
                         <label for="latitude-input" class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200">Latitude</label>
-                        <input type="number" id="latitude-input" name="latitude-input" class="w-[30%] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:ring-2 hover:ring-blue-500" min="24.50000" max="49.00000" step="0.00001" placeholder="ex. 30.00000" required>
+                        <input type="number" id="latitude-input" name="latitude-input" class="w-[30%] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:ring-2 hover:ring-blue-500" min="24.50000" max="49.00000" step="any" placeholder="ex. 30.00000" required>
 
                         <label for="longitude-input" class="block font-semibold text-sm mb-1 ml-auto text-gray-700 dark:text-gray-200">Longitude</label>
-                        <input type="number" id="longitude-input" name="longitude-input" class="w-[30%] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:ring-2 hover:ring-blue-500" min="-125.00000" max="-66.50000" step="0.00001" placeholder="ex. -98.00000" required>
+                        <input type="number" id="longitude-input" name="longitude-input" class="w-[30%] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:ring-2 hover:ring-blue-500" min="-125.00000" max="-66.50000" step="any" placeholder="ex. -98.00000" required>
                     </div>
 
+                    <p class="text-sm dark:text-white mt-2">Latitude and longitude must be in Decimal Degrees. To convert from Degrees Minutes Seconds (DMS), 
+                        <a href="https://www.fcc.gov/media/radio/dms-decimal" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline dark:text-blue-400">use this conversion tool
+                        </a>. 
+                    </p>
                 </fieldset>
 
                 <fieldset class="border-2 border-gray-300 dark:border-gray-600 p-4 rounded-md mb-6">
@@ -64,17 +68,17 @@
                         <input type="number" id="preferred-max-wind-speed" name="preferred-max-wind-speed" class="w-[30%] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:ring-2 hover:ring-blue-500" min="1">
                     </div>
 
-                    <div class="flex items-center gap-4 mb-4">
+                    <div class="flex items-center gap-2 mb-4">
                         <h4 class="font-semibold">Wind Direction(s)</h4>
 
-                        <label class="block font-semibold text-sm mb-1 ml-auto text-gray-700 dark:text-gray-200"><input type="checkbox" name="preferredWindDir" value="N" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> N</label>
-                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200"><input type="checkbox" name="preferredWindDir" value="NE" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> NE</label>
-                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200"><input type="checkbox" name="preferredWindDir" value="E" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> E</label>
-                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200"><input type="checkbox" name="preferredWindDir" value="SE" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> SE</label>
-                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200"><input type="checkbox" name="preferredWindDir" value="S" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> S</label>
-                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200"><input type="checkbox" name="preferredWindDir" value="SW" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> SW</label>
-                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200"><input type="checkbox" name="preferredWindDir" value="W" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> W</label>
-                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200"><input type="checkbox" name="preferredWindDir" value="NW" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> NW</label>
+                        <label class="block font-semibold text-sm mb-1 ml-auto text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="preferredWindDir" value="N" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> N</label>
+                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="preferredWindDir" value="NE" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> NE</label>
+                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="preferredWindDir" value="E" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> E</label>
+                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="preferredWindDir" value="SE" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> SE</label>
+                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="preferredWindDir" value="S" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> S</label>
+                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="preferredWindDir" value="SW" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> SW</label>
+                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="preferredWindDir" value="W" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> W</label>
+                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="preferredWindDir" value="NW" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> NW</label>
                         <div class="flex gap-4">
                     </div>
                 </fieldset>
@@ -109,21 +113,22 @@
                         <input type="number" id="acceptable-max-wind-speed" name="acceptable-max-wind-speed" class="w-[30%] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:ring-2 hover:ring-blue-500" min="1">
                     </div>
 
-                    <div class="flex items-center gap-4 mb-4">
+                    <div class="flex items-center gap-2 mb-4">
                         <h4 class="font-semibold">Wind Direction(s)</h4>
 
-                        <label class="block font-semibold text-sm mb-1 ml-auto text-gray-700 dark:text-gray-200"><input type="checkbox" name="acceptableWindDir" value="N" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> N</label>
-                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200"><input type="checkbox" name="acceptableWindDir" value="NE" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> NE</label>
-                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200"><input type="checkbox" name="acceptableWindDir" value="E" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> E</label>
-                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200"><input type="checkbox" name="acceptableWindDir" value="SE" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> SE</label>
-                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200"><input type="checkbox" name="acceptableWindDir" value="S" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> S</label>
-                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200"><input type="checkbox" name="acceptableWindDir" value="SW" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> SW</label>
-                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200"><input type="checkbox" name="acceptableWindDir" value="W" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> W</label>
-                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200"><input type="checkbox" name="acceptableWindDir" value="NW" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> NW</label>                        
+                        <label class="block font-semibold text-sm mb-1 ml-auto text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="acceptableWindDir" value="N" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> N</label>
+                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="acceptableWindDir" value="NE" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> NE</label>
+                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="acceptableWindDir" value="E" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> E</label>
+                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="acceptableWindDir" value="SE" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> SE</label>
+                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="acceptableWindDir" value="S" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> S</label>
+                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="acceptableWindDir" value="SW" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> SW</label>
+                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="acceptableWindDir" value="W" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> W</label>
+                        <label class="block font-semibold text-sm mb-1 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600  rounded-sm p-1"><input type="checkbox" name="acceptableWindDir" value="NW" class="text-sm text-gray-700 dark:text-gray-200 font-semibold sm:mr-4"> NW</label>                        
                     </div>
                 </fieldset>
 
-                <div id="error-message" class="hidden text-red-600 font-semibold my-2"></div>
+                <div id="error-message" class="hidden text-center text-red-600 font-semibold border border-red-600 rounded-sm my-2"></div>
+                <div id="save-message" class="hidden text-center text-green-500 font-semibold border border-green-500 rounded-sm my-2">Settings Saved!</div>
 
                 <div id="button-container" class="flex flex-col sm:flex-row sm:justify-between gap-4">
                     <button type="submit" id="submit-button" class="mt-6 px-5 py-2 rounded-md bg-blue-700 hover:bg-blue-800 text-white font-semibold text-sm shadow-md">Submit</button>
@@ -135,10 +140,11 @@
             </form>
         </div>
 
-        <h2 class="text-large font-semibold p-2">Forecast Burn Windows</h2>
-        <section id="output-container" aria-live="polite">
 
-        </section>
+        <h2 class="text-large text-center font-semibold p-2 mb-4">Forecast Burn Windows</h2>
+        <div id="legend-container"></div>
+        <section id="output-container" class="max-w-screen-md mx-auto px-4" aria-live="polite"></section>
+
     </main>
 
     <footer class="text-center mt-8 text-sm text-gray-500">

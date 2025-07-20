@@ -4,44 +4,7 @@ const propertyName = document.getElementById("property-name");
 const latitudeInput = document.getElementById("latitude-input");
 const longitudeInput = document.getElementById("longitude-input");
 
-const preferred = {
-    temp: {
-        min: document.getElementById("preferred-min-temp"),
-        max: document.getElementById("preferred-max-temp"),
-    },
-    rh: {
-        min: document.getElementById("preferred-min-rh"),
-        max: document.getElementById("preferred-max-rh"),
-    },
-    windSpeed: {
-        min: document.getElementById("preferred-min-wind-speed"),
-        max: document.getElementById("preferred-max-wind-speed"),
-    },
-    windDirs: () => getCheckedDirs("preferredWindDir")
-};
-const acceptable = {
-    temp: {
-        min: document.getElementById("acceptable-min-temp"),
-        max: document.getElementById("acceptable-max-temp"),
-    },
-    rh: {
-        min: document.getElementById("acceptable-min-rh"),
-        max: document.getElementById("acceptable-max-rh"),
-    },
-    windSpeed: {
-        min: document.getElementById("acceptable-min-wind-speed"),
-        max: document.getElementById("acceptable-max-wind-speed"),
-    },
-    windDirs: () => getCheckedDirs("acceptabaleWindDir")
-};
-
 let forecastPeriods = [];
-const structuredForecast = processForecastData(forecastPeriods);
-const burnPeriodData = filterBurnPeriods(structuredForecast);
-const evaluatedBurnPeriodData = burnPeriodData.map(period => ({
-    ...period,
-    status: determineStatus(period, preferred, acceptable)
-}));
 
 const outputContainer = document.getElementById("output-container");
 
@@ -54,6 +17,13 @@ const installBtn = document.getElementById("install-button");
 
 const darkModeBtn = document.getElementById("dark-mode-toggle");
 
+const DEBUG = false;
+
+function debugLog(...args) {
+    if (DEBUG) {
+        console.log(...args);
+    }
+}
 
 if (darkModeBtn) {
     darkModeBtn.addEventListener("click", () => {
@@ -74,16 +44,22 @@ if (darkModeBtn) {
 // get data from weather API
 async function fetchForecastData(lat, lon) {
     const pointUrl = `https://api.weather.gov/points/${lat},${lon}`;
+    debugLog(`Fetching point data from: ${pointUrl}`);
 
     try {
         const pointResponse = await fetch(pointUrl);
+        debugLog("Point response status:", pointResponse.status);
+
         if (!pointResponse.ok) {
             throw new Error(`Point forecast not found (status: ${pointResponse.status})`);
         }
         const pointData = await pointResponse.json();
-
         const forecastUrl = pointData.properties.forecastHourly;
+        debugLog(`Fetching hourly forecast from: ${forecastUrl}`); 
+
         const forecastResponse = await fetch(forecastUrl);
+        debugLog("Forecast response status:", forecastResponse.status); 
+
         if (!forecastResponse.ok) {
             throw new Error(`Hourly forecast not found (status: ${forecastResponse.status})`);
         }
@@ -113,8 +89,8 @@ function processForecastData(periods) {
         return {
             date: date,
             hour: hour,
-            temperature: period.temperature,
-            humidity: period.relativeHumidity.value,
+            temp: period.temperature,
+            rh: period.relativeHumidity.value,
             windSpeed: parseInt(period.windSpeed),
             windDir: period.windDirection,
         };
@@ -129,7 +105,55 @@ function filterBurnPeriods(periods) {
 }
 
 function getCheckedDirs(name) {
-    return Array.from(document.querySelectorAll('input[name="${name}"]:checked')).map(er => el.value);
+    return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value);
+}
+
+function setCheckedDirs(groupName, checkedValues) {
+    if (!Array.isArray(checkedValues)) {
+        console.warn(`⚠️ checkedValues for "${groupName}" is not an array:`, checkedValues);
+        return;
+    }
+
+    const checkboxes = document.querySelectorAll(`input[name="${groupName}"]`);
+    checkboxes.forEach(cb => {
+        cb.checked = checkedValues.includes(cb.value);
+    });
+}
+
+
+function getPreferredAndAcceptable() {
+    return {
+        preferred: {
+        temp: {
+            min: document.getElementById("preferred-min-temp"),
+            max: document.getElementById("preferred-max-temp"),
+        },
+        rh: {
+            min: document.getElementById("preferred-min-rh"),
+            max: document.getElementById("preferred-max-rh"),
+        },
+        windSpeed: {
+            min: document.getElementById("preferred-min-wind-speed"),
+            max: document.getElementById("preferred-max-wind-speed"),
+        },
+        windDirs: () => getCheckedDirs("preferredWindDir")
+        },
+        acceptable: {
+        temp: {
+            min: document.getElementById("acceptable-min-temp"),
+            max: document.getElementById("acceptable-max-temp"),
+        },
+        rh: {
+            min: document.getElementById("acceptable-min-rh"),
+            max: document.getElementById("acceptable-max-rh"),
+        },
+        windSpeed: {
+            min: document.getElementById("acceptable-min-wind-speed"),
+            max: document.getElementById("acceptable-max-wind-speed"),
+        },
+        windDirs: () => getCheckedDirs("acceptableWindDir")
+        }
+    }
 }
 
 function determineStatus(period, preferred, acceptable) {
@@ -154,66 +178,212 @@ function determineStatus(period, preferred, acceptable) {
     }
 }
 
-// populate forecast grid in index.html
-function buildForecastGrid(evaluatedBurnPeriodData) {
-    clearForecastGrid();
+//build legend for output-container in index.html
+function buildLegend() {
+    const legendContainer = document.getElementById("legend-container");
+    legendContainer.innerHTML = ""; // Clear previous content
 
-    // Group periods by date
-    const groupedByDate = evaluatedBurnPeriodData.reduce((groups, period) => {
-        if (!groups[period.date]) {
-        groups[period.date] = [];
-        }
-        groups[period.date].push(period);
-        return groups;
-    }, {});
+    const legendItems = [
+        { label: "Preferred", color: "bg-sky-300 dark:bg-sky-600" },
+        { label: "Acceptable", color: "bg-green-300 dark:bg-green-700" },
+        { label: "Not in Prescription", color: "bg-gray-300 dark:bg-gray-600" },
+    ];
 
-    // Create a container div to hold all days as columns
-    const gridContainer = document.createElement("div");
-    gridContainer.className = "flex gap-4";
+    const wrapper = document.createElement("div");
+    wrapper.className = "flex justify-center gap-4 mb-4 text-sm";
 
-    // For each date, create a column with hour divs
-    for (const [date, periods] of Object.entries(groupedByDate)) {
-        const dayColumn = document.createElement("div");
-        dayColumn.className = "flex flex-col border border-gray-300 rounded p-2";
+    legendItems.forEach(item => {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = `flex items-center gap-2`;
 
-        // Date header
-        const dateHeader = document.createElement("div");
-        dateHeader.textContent = date;
-        dateHeader.className = "font-semibold mb-2 text-center";
-        dayColumn.appendChild(dateHeader);
+        const colorBox = document.createElement("div");
+        colorBox.className = `${item.color} w-6 h-6 rounded`;
 
-        // Hour blocks
-        periods.forEach((period) => {
-        const hourDiv = document.createElement("div");
-        hourDiv.className = `p-2 mb-1 rounded text-sm ${
-            period.status === "preferred"
-            ? "bg-green-200 dark:bg-green-700"
-            : period.status === "acceptable"
-            ? "bg-yellow-200 dark:bg-yellow-700"
-            : "bg-gray-200 dark:bg-gray-700"
-        }`;
+        const label = document.createElement("span");
+        label.textContent = item.label;
 
-        hourDiv.textContent = `${period.hour}`;
+        itemDiv.appendChild(colorBox);
+        itemDiv.appendChild(label);
+        wrapper.appendChild(itemDiv);
+    });
 
-        dayColumn.appendChild(hourDiv);
-        });
-
-        gridContainer.appendChild(dayColumn);
-    }
-
-    outputContainer.appendChild(gridContainer);
+    legendContainer.appendChild(wrapper);
 }
 
+// populate forecast grid in index.html
+function buildForecastGrid(evaluatedBurnPeriodData) {
+  clearForecastGrid();
+
+  const groupedByDate = evaluatedBurnPeriodData.reduce((groups, period) => {
+    if (!groups[period.date]) {
+      groups[period.date] = [];
+    }
+    groups[period.date].push(period);
+    return groups;
+  }, {});
+
+  const gridContainer = document.createElement("div");
+  gridContainer.className = "flex gap-2 justify-center";
+
+  for (const [date, periods] of Object.entries(groupedByDate)) {
+    const dayColumn = document.createElement("div");
+    dayColumn.className = "flex flex-col w-28 border border-gray-300 dark:border-gray-600 rounded p-3 shadow-sm bg-white dark:bg-gray-900";
+
+    const dateHeader = document.createElement("div");
+    const dateObj = new Date(date);
+    const options = { weekday: "short" };
+    const dayName = dateObj.toLocaleDateString(undefined, options);
+    dateHeader.textContent = `${dayName} ${date}`;
+
+    dateHeader.className = "font-semibold mb-auto text-center text-lg text-gray-700 dark:text-gray-200";
+    dayColumn.appendChild(dateHeader);
+
+    periods.forEach((period) => {
+      const hourDiv = document.createElement("div");
+      hourDiv.className = `p-3 mb-2 rounded-lg text-sm font-medium text-center cursor-default ${
+        period.status === "preferred"
+          ? "bg-sky-300 dark:bg-sky-600 dark:text-white"
+          : period.status === "acceptable"
+          ? "bg-green-300 dark:bg-green-700 dark:text-white"
+          : "bg-gray-300 dark:bg-gray-600 dark:text-white"
+      }`;
+
+      hourDiv.textContent = `${period.hour}`;
+
+      dayColumn.appendChild(hourDiv);
+    });
+
+    gridContainer.appendChild(dayColumn);
+  }
+
+  outputContainer.appendChild(gridContainer);
+}
 
 // save form data for future use
 function saveFormData() {
+    const name = propertyName.value;
+    const lat = latitudeInput.value;
+    const lon = longitudeInput.value;
 
+    const getRangeValues = (rangeGroup) => ({
+        min: rangeGroup.min.value,
+        max: rangeGroup.max.value
+    });
+
+    const { preferred, acceptable } = getPreferredAndAcceptable();
+
+    const formData = {
+        propertyName: name,
+        lat,
+        lon,
+        preferred: {
+            temp: {
+                min: preferred.temp.min.value,
+                max: preferred.temp.max.value,
+            },
+            rh: {
+                min: preferred.rh.min.value,
+                max: preferred.rh.max.value,
+            },
+            windSpeed: {
+                min: preferred.windSpeed.min.value,
+                max: preferred.windSpeed.max.value,
+            },
+            windDirs: preferred.windDirs()
+        },
+        acceptable: {
+            temp: {
+                min: acceptable.temp.min.value,
+                max: acceptable.temp.max.value,
+            },
+            rh: {
+                min: acceptable.rh.min.value,
+                max: acceptable.rh.max.value,
+            },
+            windSpeed: {
+                min: acceptable.windSpeed.min.value,
+                max: acceptable.windSpeed.max.value,
+            },
+            windDirs: acceptable.windDirs()
+        }
+    };
+
+    try {
+        localStorage.setItem("burnPlannerSettings", JSON.stringify(formData));
+        debugLog("Form data saved to localStorage:", formData);
+    } catch (error) {
+        console.error("Failed to save form data:", error);
+    }
+}
+
+//load form data
+function loadFormData() {
+    const savedData = JSON.parse(localStorage.getItem("burnPlannerSettings"));
+    if (!savedData) return; // nothing to load
+
+    propertyName.value = savedData.propertyName || "";
+    latitudeInput.value = savedData.lat || "";
+    longitudeInput.value = savedData.lon || "";
+
+    const { preferred, acceptable } = getPreferredAndAcceptable();
+
+    // Preferred inputs
+    preferred.temp.min.value = savedData.preferred.temp.min;
+    preferred.temp.max.value = savedData.preferred.temp.max;
+    preferred.rh.min.value = savedData.preferred.rh.min;
+    preferred.rh.max.value = savedData.preferred.rh.max;
+    preferred.windSpeed.min.value = savedData.preferred.windSpeed.min;
+    preferred.windSpeed.max.value = savedData.preferred.windSpeed.max;
+
+    // Acceptable inputs
+    acceptable.temp.min.value = savedData.acceptable.temp.min;
+    acceptable.temp.max.value = savedData.acceptable.temp.max;
+    acceptable.rh.min.value = savedData.acceptable.rh.min;
+    acceptable.rh.max.value = savedData.acceptable.rh.max;
+    acceptable.windSpeed.min.value = savedData.acceptable.windSpeed.min;
+    acceptable.windSpeed.max.value = savedData.acceptable.windSpeed.max;
+
+    // Wind direction checkboxes
+    if (Array.isArray(savedData.preferred.windDirs)) {
+        setCheckedDirs("preferredWindDir", savedData.preferred.windDirs);
+    }
+
+    if (Array.isArray(savedData.acceptable.windDirs)) {
+        setCheckedDirs("acceptableWindDir", savedData.acceptable.windDirs);
+    }
 }
 
 // clear form data 
 function clearFormData() {
+    propertyName.value = "";
+    latitudeInput.value = "";
+    longitudeInput.value = "";
 
-}
+    const { preferred, acceptable } = getPreferredAndAcceptable();
+
+    preferred.temp.min.value = "";
+    preferred.temp.max.value = "";
+    preferred.rh.min.value = "";
+    preferred.rh.max.value = "";
+    preferred.windSpeed.min.value = "";
+    preferred.windSpeed.max.value = "";
+
+    acceptable.temp.min.value = "";
+    acceptable.temp.max.value = "";
+    acceptable.rh.min.value = "";
+    acceptable.rh.max.value = "";
+    acceptable.windSpeed.min.value = "";
+    acceptable.windSpeed.max.value = "";
+
+    function clearChecked(groupName) {
+        const checkboxes = document.querySelectorAll(`input[name="${groupName}"]`);
+        checkboxes.forEach(cb => {
+        cb.checked = false;
+        });
+    }
+    clearChecked("preferredWindDir");
+    clearChecked("acceptableWindDir");
+    }
 
 //clear forecast grid
 function clearForecastGrid() {
@@ -234,6 +404,8 @@ function clearErrorMessage() {
 
 
 // EVENT LISTENERS
+document.addEventListener("DOMContentLoaded", loadFormData);
+
 submitBtn.addEventListener("click", async (e) => {
     e.preventDefault();
 
@@ -243,57 +415,77 @@ submitBtn.addEventListener("click", async (e) => {
     const lat = parseFloat(latitudeInput.value);
     const lon = parseFloat(longitudeInput.value);
 
+    if (isNaN(lat) || isNaN(lon)) {
+        showErrorMessage("Please enter valid latitude and longitude coordinates.");
+        return;
+    }
+
+    const { preferred, acceptable } = getPreferredAndAcceptable();
+        
+    const getRangeValues = (range) => ({
+        min: parseFloat(range.min.value),
+        max: parseFloat(range.max.value)
+    });
+
     try {
+        debugLog("Loading forecast data for:", lat, lon);
         await loadForecastData(lat, lon);
 
+        debugLog("Raw forecastPeriods array:", forecastPeriods);
+
         const structuredForecast = processForecastData(forecastPeriods);
+        debugLog("Processed structuredForecast:", structuredForecast);
+
         const burnPeriodData = filterBurnPeriods(structuredForecast);
+        debugLog("Filtered burnPeriodData (0800-2000):", burnPeriodData);
+
+        const preferredValues = {
+            temp: getRangeValues(preferred.temp),
+            rh: getRangeValues(preferred.rh),
+            windSpeed: getRangeValues(preferred.windSpeed),
+            windDirs: preferred.windDirs()
+        };
+        debugLog("Preferred values:", preferredValues);
+
+        const acceptableValues = {
+            temp: getRangeValues(acceptable.temp),
+            rh: getRangeValues(acceptable.rh),
+            windSpeed: getRangeValues(acceptable.windSpeed),
+            windDirs: acceptable.windDirs()
+        };
+        debugLog("Acceptable values:", acceptableValues);
+
         const evaluatedBurnPeriodData = burnPeriodData.map(period => ({
             ...period,
-            status: determineStatus(period, {
-                temp: {
-                    min: parseFloat(preferred.temp.min.value),
-                    max: parseFloat(preferred.temp.max.value)
-                },
-                rh: {
-                    min: parseFloat(preferred.rh.min.value),
-                    max: parseFloat(preferred.rh.max.value)
-                },
-                windSpeed: {
-                    min: parseFloat(preferred.windSpeed.min.value),
-                    max: parseFloat(preferred.windSpeed.max.value)
-                },
-                windDirs: preferred.windDirs()
-            }, {
-                temp: {
-                    min: parseFloat(acceptable.temp.min.value),
-                    max: parseFloat(acceptable.temp.max.value)
-                },
-                rh: {
-                    min: parseFloat(acceptable.rh.min.value),
-                    max: parseFloat(acceptable.rh.max.value)
-                },
-                windSpeed: {
-                    min: parseFloat(acceptable.windSpeed.min.value),
-                    max: parseFloat(acceptable.windSpeed.max.value)
-                },
-                windDirs: acceptable.windDirs()
-            })
+            status: determineStatus(period, preferredValues, acceptableValues)
         }));
+        debugLog("Evaluated burn period data with status:", evaluatedBurnPeriodData);
 
+        buildLegend();
         buildForecastGrid(evaluatedBurnPeriodData);
 
     } catch (error) {
+        console.error("Error caught in event listener:", error);
         showErrorMessage("No forecast data found for this location. Please check your latitude and longitude.");
     }
 });
 
-
 saveBtn.addEventListener("click", () => {
     saveFormData();
+
+    const saveMessage = document.getElementById("save-message");
+    saveMessage.classList.remove("hidden");
+
+    setTimeout(() => {
+        saveMessage.classList.add("hidden");
+    }, 2000);
+    
+    saveBtn.disabled = true;
+    setTimeout(() => saveBtn.disabled = false, 1000);
 });
 
 clearBtn.addEventListener("click", () => {
+    clearFormData();
     clearForecastGrid();
 });
 
@@ -318,7 +510,7 @@ installBtn?.addEventListener("click", async () => {
 
     // Wait for the user's response
     const { outcome } = await deferredPrompt.userChoice;
-    console.log("User choice:", outcome);
+    debugLog("User choice:", outcome);
 
     // Reset the deferred prompt variable & hide button
     deferredPrompt = null;
@@ -327,7 +519,7 @@ installBtn?.addEventListener("click", async () => {
 
 // Listen for appinstalled event
 window.addEventListener("appinstalled", () => {
-    console.log("✅ App installed");
+    debugLog("✅ App installed");
     deferredPrompt = null;
     installBtn?.classList.add("hidden");
 });
