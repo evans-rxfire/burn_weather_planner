@@ -91,10 +91,14 @@ async function loadForecastData(lat, lon) {
 function processForecastData(periods) {
     return periods.map((period) => {
         const dateObj = new Date(period.startTime);
+        
         const hour = String(dateObj.getHours()).padStart(2, '0') + '00';
-        const date = dateObj.toLocaleDateString("en-US", {
-            month: "2-digit",
-            day: "2-digit"
+        
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const date = `${year}-${month}-${day}`;
+
     });
 
         return {
@@ -121,7 +125,7 @@ function getCheckedDirs(name) {
 
 function setCheckedDirs(groupName, checkedValues) {
     if (!Array.isArray(checkedValues)) {
-        console.warn(`⚠️ checkedValues for "${groupName}" is not an array:`, checkedValues);
+        console.warn(`checkedValues for "${groupName}" is not an array:`, checkedValues);
         return;
     }
 
