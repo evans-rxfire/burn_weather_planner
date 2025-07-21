@@ -6,6 +6,17 @@ const longitudeInput = document.getElementById("longitude-input");
 
 let forecastPeriods = [];
 
+const windDirectionGroups = {
+  	N: ["N", "NNE", "NNW"],
+  	NE: ["NE", "NNE", "ENE"],
+  	E: ["E", "ENE", "ESE"],
+  	SE: ["SE", "SSE", "ESE"],
+  	S: ["S", "SSE", "SSW"],
+  	SW: ["SW", "SSW", "WSW"],
+  	W: ["W", "WSW", "WNW"],
+  	NW: ["NW", "NNW", "WNW"]
+};
+
 const outputContainer = document.getElementById("output-container");
 
 const submitBtn = document.getElementById("submit-button");
@@ -118,6 +129,7 @@ function filterBurnPeriods(periods) {
     });
 }
 
+
 function getCheckedDirs(name) {
     return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value);
 }
@@ -170,6 +182,14 @@ function getPreferredAndAcceptable() {
     }
 }
 
+function matchesWindDirGroup(userDirs, forecastDir) {
+  	return userDirs.some(userDir => {
+    	const group = windDirectionGroups[userDir] || [];
+    	return group.includes(forecastDir);
+  	});
+}
+
+
 function determineStatus(period, preferred, acceptable) {
     const { temp, rh, windSpeed, windDir } = period;
 
@@ -177,14 +197,14 @@ function determineStatus(period, preferred, acceptable) {
         temp >= preferred.temp.min && temp <= preferred.temp.max &&
         rh >= preferred.rh.min && rh <= preferred.rh.max &&
         windSpeed >= preferred.windSpeed.min && windSpeed <= preferred.windSpeed.max &&
-        preferred.windDirs.includes(windDir)
+        matchesWindDirGroup(preferred.windDirs, windDir)
     ) {
         return "preferred";
     } else if (
         temp >= acceptable.temp.min && temp <= acceptable.temp.max &&
         rh >= acceptable.rh.min && rh <= acceptable.rh.max &&
         windSpeed >= acceptable.windSpeed.min && windSpeed <= acceptable.windSpeed.max &&
-        acceptable.windDirs.includes(windDir)
+        matchesWindDirGroup(acceptable.windDirs, windDir)
     ) {
         return "acceptable";
     } else {
