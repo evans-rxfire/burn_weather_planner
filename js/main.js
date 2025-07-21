@@ -106,6 +106,7 @@ function processForecastData(periods) {
             rh: period.relativeHumidity.value,
             windSpeed: parseInt(period.windSpeed),
             windDir: period.windDirection,
+            startTime: period.startTime
         };
   	});
 }
@@ -241,13 +242,15 @@ function buildForecastGrid(evaluatedBurnPeriodData) {
         const dayColumn = document.createElement("div");
         dayColumn.className = "flex flex-col w-28 border border-gray-300 dark:border-gray-600 rounded p-3 shadow-sm bg-white dark:bg-gray-900";
 
-        const dateHeader = document.createElement("div");
-        const dateObj = new Date(date);
-        const options = { weekday: "short" };
-        const dayName = dateObj.toLocaleDateString(undefined, options);
-        dateHeader.textContent = `${dayName} ${date}`;
-
+		const firstPeriodDate = new Date(periods[0].startTime);
+		const dayName = firstPeriodDate.toLocaleDateString(undefined, { weekday: "short" });
+		const month = firstPeriodDate.getMonth() + 1;
+		const day = firstPeriodDate.getDate();
+		
+    	const dateHeader = document.createElement("div");
+    	dateHeader.textContent = `${dayName} ${month}/${day}`;
         dateHeader.className = "font-semibold mb-auto text-center text-lg text-gray-700 dark:text-gray-200";
+        
         dayColumn.appendChild(dateHeader);
 
         periods.forEach((period) => {
