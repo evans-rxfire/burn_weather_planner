@@ -99,8 +99,6 @@ function processForecastData(periods) {
         const day = String(dateObj.getDate()).padStart(2, '0');
         const date = `${year}-${month}-${day}`;
 
-    });
-
         return {
             date: date,
             hour: hour,
@@ -109,7 +107,7 @@ function processForecastData(periods) {
             windSpeed: parseInt(period.windSpeed),
             windDir: period.windDirection,
         };
-  });
+  	});
 }
 
 function filterBurnPeriods(periods) {
