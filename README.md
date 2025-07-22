@@ -17,6 +17,7 @@ A web-based tool to assist in the prescribed fire planning process by evaluating
   - Wind Speed
   - Wind Direction
 - The user can input weather parameters for a preferred range fo condtions and a broader acceptable range. 
+- Location information (County and State) are provided by **OpenStreeMap**, but not available when using app as PWA. 
 
 ---
 
@@ -42,6 +43,7 @@ A web-based tool to assist in the prescribed fire planning process by evaluating
  - Tailwind CSS for styling
  - Designed for modern browsers
  - Uses api.weather.gov for weather forecast data
+ - Uses Nominatum for location information
 
 ## Background
 
@@ -52,7 +54,8 @@ Prescribed burn planning during the burn season can be difficult when planning f
 - [x] Basic burn location and prescription parameter form
 - [x] Fetch weather data and determine prescription status
 - [x] Save form data for mutliple runs without need to re-enter inputs
-- [ ] Hovering over each hour in output will show weather forecast values
+- [x] Hovering over each hour in output will show weather forecast values
+- [x] Shows location information (County, State) based on user inputs
 - [ ] Responsive mobile interface
 
 ## Contributing

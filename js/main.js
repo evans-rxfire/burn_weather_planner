@@ -17,6 +17,7 @@ const windDirectionGroups = {
   	NW: ["NW", "NNW", "WNW"]
 };
 
+const outputHeader = document.getElementById("output-header");
 const outputContainer = document.getElementById("output-container");
 
 const submitBtn = document.getElementById("submit-button");
@@ -63,6 +64,11 @@ function debugLog(...args) {
     }
 }
 
+function isPWA() {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+
 // get data from weather API
 async function fetchForecastData(lat, lon) {
     const pointUrl = `https://api.weather.gov/points/${lat},${lon}`;
@@ -97,6 +103,43 @@ async function fetchForecastData(lat, lon) {
 async function loadForecastData(lat, lon) {
   forecastPeriods = await fetchForecastData(lat, lon);
 }
+
+
+// function to retrieve location information from OSM
+async function fetchLocationDetails(lat, lon) {
+    const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=8&addressdetails=1`;
+
+    try {
+        const response = await fetch(nominatimUrl, {
+            headers: {
+                "User-Agent": "RxBurnWeatherPlanner/1.0 (evans.rxfire@gmail.com) "
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Location lookup failed (status: ${response.status})`);
+        }
+
+        const data = await response.json();
+        const address = data.address || {};
+
+        return {
+            county: address.county || "Unknown County",
+            state: address.state || "Unknown State"
+        };
+    } catch (error) {
+        console.error("Error fetching location details:", error);
+        return {
+            county: "Unknown County",
+            state: "Unknown State"
+        };
+    }
+}
+
+async function loadLocationData(lat, lon) {
+    return await fetchLocationDetails(lat, lon);
+}
+
 
 // functions to work through weather forecast data
 function processForecastData(periods) {
@@ -244,8 +287,10 @@ function buildLegend() {
 }
 
 // populate forecast grid in index.html
-function buildForecastGrid(evaluatedBurnPeriodData) {
+function buildForecastGrid(evaluatedBurnPeriodData, location) {
     clearForecastGrid();
+
+    outputHeader.textContent += ` for: ${propertyName}, ${location.county}, ${location.state}`;
 
     const groupedByDate = evaluatedBurnPeriodData.reduce((groups, period) => {
         if (!groups[period.date]) {
@@ -475,6 +520,20 @@ submitBtn.addEventListener("click", async (e) => {
         debugLog("Loading forecast data for:", lat, lon);
         await loadForecastData(lat, lon);
 
+        let location = { county: "Unknown County", state: "Unknown State" };
+        if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true) {
+            console.warn("PWA mode detected. Skipping location lookup.");
+
+            const locationNotice = document.createElement("span");
+            locationNotice.className = "text-md text-blue-600 dark:text-blue-500";
+            locationNotice.textContent = "(Location information is unavailable in installed mode)";
+
+            outputHeader.appendChild(locationNotice);
+        } else {
+            debugLog("Fetching location data for:", lat, lon);
+            location = await loadLocationData(lat, lon);
+        }
+
         debugLog("Raw forecastPeriods array:", forecastPeriods);
 
         const structuredForecast = processForecastData(forecastPeriods);
@@ -506,7 +565,7 @@ submitBtn.addEventListener("click", async (e) => {
         debugLog("Evaluated burn period data with status:", evaluatedBurnPeriodData);
 
         buildLegend();
-        buildForecastGrid(evaluatedBurnPeriodData);
+        buildForecastGrid(evaluatedBurnPeriodData, location);
 
     } catch (error) {
         console.error("Error caught in event listener:", error);
