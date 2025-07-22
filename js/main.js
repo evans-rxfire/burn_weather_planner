@@ -491,6 +491,7 @@ function clearFormData() {
 // Clear forecast grid
 function clearForecastGrid() {
     outputContainer.innerHTML = "";
+    outputHeader.textContent = outputHeader.dataset.base;
 }
 
 // Error message functions
