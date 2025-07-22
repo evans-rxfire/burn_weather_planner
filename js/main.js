@@ -57,19 +57,20 @@ if ('serviceWorker' in navigator) {
 
 
 // FUNCTIONS
-// debugging
+// Debugging
 function debugLog(...args) {
     if (DEBUG) {
         console.log(...args);
     }
 }
 
+// Check if PWA to disable location info fetch from Nominatim
 function isPWA() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
 }
 
 
-// get data from weather API
+// Get data from weather API
 async function fetchForecastData(lat, lon) {
     const pointUrl = `https://api.weather.gov/points/${lat},${lon}`;
     debugLog(`Fetching point data from: ${pointUrl}`);
@@ -105,7 +106,7 @@ async function loadForecastData(lat, lon) {
 }
 
 
-// function to retrieve location information from OSM
+// Function to retrieve location information from Nominatim
 async function fetchLocationDetails(lat, lon) {
     const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=8&addressdetails=1`;
 
@@ -141,7 +142,7 @@ async function loadLocationData(lat, lon) {
 }
 
 
-// functions to work through weather forecast data
+// Functions to work through weather forecast data
 function processForecastData(periods) {
     return periods.map((period) => {
         const dateObj = new Date(period.startTime);
@@ -255,7 +256,7 @@ function determineStatus(period, preferred, acceptable) {
     }
 }
 
-//build legend for output-container in index.html
+// Build legend for output-container in index.html
 function buildLegend() {
     const legendContainer = document.getElementById("legend-container");
     legendContainer.innerHTML = "";
@@ -286,19 +287,24 @@ function buildLegend() {
     legendContainer.appendChild(wrapper);
 }
 
-// populate forecast grid in index.html
+// Populate forecast grid in index.html
 function buildForecastGrid(evaluatedBurnPeriodData, location) {
     clearForecastGrid();
 
-    outputHeader.textContent += ` for: ${propertyName}, ${location.county}, ${location.state}`;
+    outputHeader.textContent += ` for: ${propertyName.value}, ${location.county}, ${location.state}`;
 
     const groupedByDate = evaluatedBurnPeriodData.reduce((groups, period) => {
         if (!groups[period.date]) {
-        groups[period.date] = [];
+            groups[period.date] = [];
         }
         groups[period.date].push(period);
         return groups;
     }, {});
+
+    const burnHours = [
+        "0800", "0900", "1000", "1100", "1200", "1300",
+        "1400", "1500", "1600", "1700", "1800", "1900", "2000"
+    ];
 
     const gridContainer = document.createElement("div");
     gridContainer.className = "flex gap-2 justify-center";
@@ -307,39 +313,48 @@ function buildForecastGrid(evaluatedBurnPeriodData, location) {
         const dayColumn = document.createElement("div");
         dayColumn.className = "flex flex-col w-28 border border-gray-300 dark:border-gray-600 rounded p-3 shadow-sm bg-white dark:bg-gray-900";
 
-		const firstPeriodDate = new Date(periods[0].startTime);
-		const dayName = firstPeriodDate.toLocaleDateString(undefined, { weekday: "short" });
-		const month = firstPeriodDate.getMonth() + 1;
-		const day = firstPeriodDate.getDate();
-		
-    	const dateHeader = document.createElement("div");
-    	dateHeader.textContent = `${dayName} ${month}/${day}`;
-        dateHeader.className = "font-semibold mb-auto text-center text-lg text-gray-700 dark:text-gray-200";
-        
+        const firstPeriodDate = new Date(periods[0].startTime);
+        const dayName = firstPeriodDate.toLocaleDateString(undefined, { weekday: "short" });
+        const month = firstPeriodDate.getMonth() + 1;
+        const day = firstPeriodDate.getDate();
+
+        const dateHeader = document.createElement("div");
+        dateHeader.textContent = `${dayName} ${month}/${day}`;
+        dateHeader.className = "font-semibold mb-2 text-center text-lg text-gray-700 dark:text-gray-200";
+
         dayColumn.appendChild(dateHeader);
 
-        periods.forEach((period) => {
+        burnHours.forEach((hour) => {
+            const period = periods.find(p => p.hour === hour);
+
             const hourDiv = document.createElement("div");
-            hourDiv.className = `p-3 mb-2 rounded-lg text-sm font-medium text-center cursor-default ${
-                period.status === "preferred"
-                ? "bg-sky-300 dark:bg-sky-600 dark:text-white"
-                : period.status === "acceptable"
-                ? "bg-green-300 dark:bg-green-700 dark:text-white"
-                : "bg-gray-300 dark:bg-gray-600 dark:text-white"
-            }`;
+            hourDiv.className = "p-3 mb-2 rounded-lg text-sm font-medium text-center cursor-default";
 
-            hourDiv.textContent = `${period.hour}`;
+            if (period) {
+                hourDiv.textContent = `${period.hour}`;
+                hourDiv.className += ` ${
+                    period.status === "preferred"
+                        ? "bg-sky-300 dark:bg-sky-600 dark:text-white"
+                        : period.status === "acceptable"
+                        ? "bg-green-300 dark:bg-green-700 dark:text-white"
+                        : "bg-gray-300 dark:bg-gray-600 dark:text-white"
+                }`;
 
-            hourDiv.title = `
-            Date: ${period.date}
-            Hour: ${period.hour}
-            Temp: ${period.temp}\u00B0F
-            RH: ${period.rh}%
-            Wind Speed: ${period.windSpeed}mph
-            Wind Direction: ${period.windDir}
-            Status: ${period.status}
-            `.trim();
-            
+                hourDiv.title = `
+                    Date: ${period.date}
+                    Hour: ${period.hour}
+                    Temp: ${period.temp}\u00B0F
+                    RH: ${period.rh}%
+                    Wind Speed: ${period.windSpeed}mph
+                    Wind Direction: ${period.windDir}
+                    Status: ${period.status}
+                `.trim();
+            } else {
+                hourDiv.className += " bg-transparent";
+                hourDiv.textContent = "";
+                hourDiv.title = `No data for ${hour}`;
+            }
+
             dayColumn.appendChild(hourDiv);
         });
 
@@ -349,7 +364,8 @@ function buildForecastGrid(evaluatedBurnPeriodData, location) {
     outputContainer.appendChild(gridContainer);
 }
 
-// save form data for future use
+
+// Save form data for future use
 function saveFormData() {
     const name = propertyName.value;
     const lat = latitudeInput.value;
@@ -406,7 +422,7 @@ function saveFormData() {
     }
 }
 
-//load form data
+// Load form data
 function loadFormData() {
     const savedData = JSON.parse(localStorage.getItem("burnPlannerSettings"));
     if (!savedData) return;
@@ -440,7 +456,7 @@ function loadFormData() {
     }
 }
 
-// clear form data 
+// Clear form data 
 function clearFormData() {
     propertyName.value = "";
     latitudeInput.value = "";
@@ -472,12 +488,12 @@ function clearFormData() {
     clearChecked("acceptableWindDir");
     }
 
-// clear forecast grid
+// Clear forecast grid
 function clearForecastGrid() {
     outputContainer.innerHTML = "";
 }
 
-// error message functions
+// Error message functions
 function showErrorMessage(msg) {
     const errorDiv = document.getElementById("error-message");
     errorDiv.textContent = msg;
@@ -593,7 +609,6 @@ clearBtn.addEventListener("click", () => {
     clearFormData();
     clearForecastGrid();
 });
-
 
 
 // app install language
