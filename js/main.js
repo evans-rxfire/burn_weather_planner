@@ -1,3 +1,4 @@
+// work on using NWS grid forecast instead of regular hourly forecast
 const htmlElement = document.documentElement;
 
 const propertyName = document.getElementById("property-name");
