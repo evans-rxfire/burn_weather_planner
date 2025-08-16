@@ -83,28 +83,37 @@ async function fetchForecastData(lat, lon) {
         if (!pointResponse.ok) {
             throw new Error(`Point forecast not found (status: ${pointResponse.status})`);
         }
+
         const pointData = await pointResponse.json();
-        const forecastUrl = pointData.properties.forecastHourly;
-        debugLog(`Fetching hourly forecast from: ${forecastUrl}`); 
+        // Use forecastGridData instead of forecastHourly
+        const gridUrl = pointData.properties.forecastGridData;
+        debugLog(`Fetching grid forecast from: ${gridUrl}`);
 
-        const forecastResponse = await fetch(forecastUrl);
-        debugLog("Forecast response status:", forecastResponse.status); 
+        const gridResponse = await fetch(gridUrl);
+        debugLog("Grid forecast response status:", gridResponse.status);
 
-        if (!forecastResponse.ok) {
-            throw new Error(`Hourly forecast not found (status: ${forecastResponse.status})`);
+        if (!gridResponse.ok) {
+            throw new Error(`Grid forecast not found (status: ${gridResponse.status})`);
         }
-        const forecastData = await forecastResponse.json();
 
-        return forecastData.properties.periods;
+        const gridData = await gridResponse.json();
+
+        // Transform gridData into your existing period structure
+        const transformedPeriods = transformGridData(gridData);
+
+        return transformedPeriods;
+
     } catch (error) {
         console.error("Error fetching forecast data:", error);
         throw error;
     }
 }
 
+// Load function that sets the global forecastPeriods
 async function loadForecastData(lat, lon) {
-  forecastPeriods = await fetchForecastData(lat, lon);
+    forecastPeriods = await fetchForecastData(lat, lon);
 }
+
 
 
 // Function to retrieve location information from Nominatim
@@ -144,28 +153,48 @@ async function loadLocationData(lat, lon) {
 
 
 // Functions to work through weather forecast data
-function processForecastData(periods) {
-    return periods.map((period) => {
-        const dateObj = new Date(period.startTime);
-        
-        const hour = String(dateObj.getHours()).padStart(2, '0') + '00';
-        
-        const year = dateObj.getFullYear();
-        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const day = String(dateObj.getDate()).padStart(2, '0');
-        const date = `${year}-${month}-${day}`;
-
-        return {
-            date: date,
-            hour: hour,
-            temp: period.temperature,
-            rh: period.relativeHumidity.value,
-            windSpeed: parseInt(period.windSpeed),
-            windDir: period.windDirection,
-            startTime: period.startTime
-        };
-  	});
+function degToCardinal(deg) {
+    const directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+                        "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+    const index = Math.round(deg / 22.5) % 16;
+    return directions[index];
 }
+
+function cToF(celsius) {
+    return Math.round((celsius * 9/5) + 32);
+}
+
+function kmhToMph(km) {
+    return Math.round(kmh * 0.621371);
+}
+
+
+function transformGridData(gridData) {
+    const periods = [];
+    const tempValues = gridData.properties.temperature.values;
+    const rhValues = gridData.properties.relativeHumidity.values;
+    const windSpeedValues = gridData.properties.windSpeed.values;
+    const windDirValues = gridData.properties.windDirection.values.map(v => 
+        v?.value != null ? degToCardinal(v.value) : null);
+
+    // loop over temperature timestamps (they all share the same time resolution)
+    for (let i = 0; i < tempValues.length; i++) {
+        const timestamp = new Date(tempValues[i].validTime.split("/")[0]);
+        const hour = timestamp.toISOString().slice(11,16).replace(":", ""); // "0800" style
+
+        periods.push({
+        date: timestamp.toISOString().split("T")[0],
+        hour,
+        startTime: timestamp,
+        temp: cToF(tempValues[i].value),
+        rh: rhValues[i]?.value ?? null,
+        windSpeed: kmhToMph(windSpeedValues[i]?.value ?? null),
+        windDir: windDirValues[i] ?? null
+        });
+    }
+    return periods;
+}
+
 
 function filterBurnPeriods(periods) {
     return periods.filter((period) => {
@@ -528,7 +557,7 @@ submitBtn.addEventListener("click", async (e) => {
     }
 
     const { preferred, acceptable } = getPreferredAndAcceptable();
-        
+
     const getRangeValues = (range) => ({
         min: parseFloat(range.min.value),
         max: parseFloat(range.max.value)
@@ -536,7 +565,7 @@ submitBtn.addEventListener("click", async (e) => {
 
     try {
         debugLog("Loading forecast data for:", lat, lon);
-        await loadForecastData(lat, lon);
+        await loadForecastData(lat, lon); // forecastPeriods is now structured
 
         let location = { county: "Unknown County", state: "Unknown State" };
         if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true) {
@@ -552,12 +581,9 @@ submitBtn.addEventListener("click", async (e) => {
             location = await loadLocationData(lat, lon);
         }
 
-        debugLog("Raw forecastPeriods array:", forecastPeriods);
+        debugLog("Structured forecastPeriods:", forecastPeriods);
 
-        const structuredForecast = processForecastData(forecastPeriods);
-        debugLog("Processed structuredForecast:", structuredForecast);
-
-        const burnPeriodData = filterBurnPeriods(structuredForecast);
+        const burnPeriodData = filterBurnPeriods(forecastPeriods);
         debugLog("Filtered burnPeriodData (0800-2000):", burnPeriodData);
 
         const preferredValues = {
